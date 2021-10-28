@@ -20,7 +20,7 @@ Parrots are well-known for their exceptionally long lives and cognitive complexi
 
 ANALYSIS:
   - CODE: the code to replicate results
-  - DATA: raw data ;will be available upon publication
+  - DATA: raw data; will be available upon publication
   - RESULTS: intermediate results and figures; will be available upon publication
 
 NOTE: Some data contains sensitive information (zoo records) and can therefore not be made available even after publication. Processed data will be made available.
