@@ -1,0 +1,461 @@
+---
+title: "Supplemental Methods and Results"
+date: "28-10-2021"
+output:
+  pdf_document:
+    toc: yes
+editor_options:
+  chunk_output_type: console
+header-includes:
+- \renewcommand{\figurename}{Figure S}
+- \makeatletter
+- \def\fnum@figure{\figurename\thefigure}
+- \makeatother
+bibliography: bibliography.bib
+---
+
+```{r setup, include=FALSE}
+# Set up
+# setwd('/Users/ssmeele/ownCloud/Simeon/MPI AB/PhD thesis/Chapter IV/Coevolution_of_brain_size_and_longevity_in_parrots_supports_the_cognitive_buffer_hypothesis/ANALYSIS/CODE/markdowns')
+library(tidyverse)
+library(ape)
+library(phytools)
+library(grid)
+library(VennDiagram)
+library(dagitty)
+library(readxl)
+library(rethinking)
+library(ggridges)
+
+# Clean environment
+rm(list = ls())
+
+# Load functions
+.functions = sapply(list.files('../functions', pattern = '*.R', full.names = T), source)
+
+# Paths
+path_script_data_merge = '../02.1 DATA - merge all.R'
+path_models = '../../RESULTS/models'
+path_phylo = '../../RESULTS/figures/phylogentic tree - with names.pdf'
+path_pdf_m1 = '../../RESULTS/figures/brain vs life model 1.pdf'
+
+# Load data and models 
+source(path_script_data_merge, chdir = T)
+for(file in list.files(path_models, '*RData', full.names = T)) load(file)
+
+# Colours
+colours = list(blue = '#039BE5', grey = '#CFD8DC', purple = '#9575CD', green = '#81C784', 
+               red = '#EF5350', brown = '#8D6E63', yellow = '#FFB74D', pink = '#F06292')
+```
+
+# Supplemental Methods
+
+## Standardisation taxonomy
+
+All species names were converted to species-level names using the taxonomy of the IUCN Red List of Threatened Species^TM^ [@IUCN] prior to any analysis. If the species names were not found as accepted species names or in the synonym list, fuzzy matching was attempted using the function *stringdist* from the package *stringdist* [@stringdist] in R [@R] with default settings. A match was accepted if the distance was less than four characters. Species that were still not found were manually matched (if possible) using the IUCN website and Avibase [@lepage2014avibase]. If records were at subspecies level, taxonomy was standardised using a subspecies level list from IUCN [@IUCN], which assigns subspecies to their respective parent taxon. If the name was not found there the species level name was used for standardisation. A full translation list can be found in the Supplemental Materials.
+
+## Life expectancy pre-processing
+
+We extracted data on birth and death dates from the Species360 Zoological Information Management System (ZIMS) [@Species360]. We only included a total number of 244 species with records for at least 50 individuals to ensure sufficient data for a reliable fit of life expectancy. We ran BaSTA models on a random subset for species with large sample size (N > 1000) to determine this threshold. We only included individuals that died after 1980, when husbandry guidelines were greatly improved. We further excluded individuals with lifespans that were outside the 99th percentile of the species lifespan to minimise the number of data entry errors. We also excluded stillbirths (i.e., individuals that died on the day of birth), individuals of unknown sex and surgically contracepted individuals. For the estimation of life expectancies see the main text. 
+
+## Body weight
+
+We extracted weight measurement from ZIMS and only included captive born individuals where the birth date was not estimated. We also only included individuals for which the lifespan was within the 99.9% range to minimize the potential data-entry errors. Only measurements with a 'normal' health status were included. Clear outliers with respect to age and weight were removed manually to reduce the effect of data-entry errors. Only weight measurements of individuals older than half the maximum age (measured on a log scale) were included. This threshold was chosen such that only adult weights were included. Since there is no consensus on physical maturity for all species and fitting a bespoke growth curve was outside the scope of this paper, this was the best available method to exclude juveniles. Additional outliers were removed if they were larger than the third quantile plus three times the inter-quantile distance or smaller than the first quantile minus three times the inter-quantile distance (on a log scale). All measurements were plotted per species and the cleaning performance was assessed visually. 
+
+Additional measurements were included from the literature for species where no ZIMS data were available [@conde2019data]. For these species the value from the literature was included as a single measurement for a single individual since no sample size or standard error was reported in most cases. 
+
+To estimate the average adult body weight per species we ran a Bayesian model with the following structure:
+
+$$\begin{aligned}
+\text{log weight}_i & \sim \text{normal}(\mu_i, \sigma)\\
+\mu_i & =  \alpha_{\text{species}[i]} + z_{\text{individual}[j]} * \phi_{\text{species}[i]}\\
+\alpha_{\text{species}} & \sim \text{normal}(6,6)\\
+z_{\text{individual}} & \sim \text{normal}(0,1)\\
+\phi_{\text{species}} & \sim \text{lognormal}(\overline{\phi}, s)\\
+\overline{\phi} & \sim \text{normal}(-2, 0.5)\\
+s & \sim \text{exponential}(5)\\
+\sigma & \sim \text{exponential}(1)
+\end{aligned}$$
+
+Where $\mu_i$ is the species-level average, $\alpha_{\text{species}[i]}$ the species-level intercept, $z_{\text{individual}[j]}$ the z-score of the individual-level off-set, $\phi_{\text{species}[i]}$ the species-level standard deviation of the off-set, $\overline{\phi}$ the average standard deviation of the individual-level off-set, $s$ the standard deviation of the aforementioned and $\sigma$ the standard deviation of the distribution of log weights. Priors were chosen with prior predictive simulations to ensure that predictions were mostly restricted to reasonable values. The multi-level prior for the individual variation was used to inform parameters for species with only a single individual. The model was run using the function *ulam* from the package *rethinking* [@rethinking] in R, which is an interface to run the No U-turn Sampler (an improved version of the Hamiltonian Monte Carlo algorithm) in Stan [@gelman2015stan]. The estimated means and standard errors of the mean were exported and used in further analysis. 
+
+## Brain size
+
+Raw brain size measurements were compiled from three sources: new measurements of brain weight, brain weight taken from @iwaniuk2005interspecific and endocranial volumes taken from @ksepka2020tempo. Brain weight was estimated from endocranial volumes using: 1.036 g/ml [@kretschmann1969biometrische]. To estimate the average log adult brain weight per species we ran a Bayesian model with the following structure:
+
+$$\begin{aligned}
+\text{brain weight}_i & \sim \text{normal}(\mu_i,\ \sigma)\\
+\mu_i & =  \alpha_{\text{species}[i]}\\
+\alpha_{\text{species}} & \sim \text{normal}(\overline\alpha,\ \text{s})\\
+\overline\alpha & \sim \text{normal}(2,\ 1)\\
+\text{s} & \sim \text{exponential}(1)\\
+\sigma & \sim \text{exponential}(1)\\
+\end{aligned}$$
+
+Priors were chosen with prior predictive simulations to ensure that predictions were mostly restricted to reasonable values. We choose to run a multi-level model to inform the overall mean ($\overline\alpha$) by the data rather than setting it to a fixed value. The model was run using the function *ulam* from the package *rethinking* in R. The estimated means and standard errors of the mean were exported and used in further analysis. After estimation of averages from raw data, we added additional summarised data from @schuck2008cognition estimating SE from the reported sample sizes and the standard variation from the raw data. 
+
+## Diet
+
+We compiled diet data from the primary literature and by contacting individual researchers. The reports from experts working specifically on a particular species were given priority. We scored diet composition across nine categories, which were either considered to have high or low protein content (low: nectar, sugar/honeydew, fruit, leaves/shoots/buds trees, leaves/shoots/buds ground cover, bulbs/roots; high: seeds, nuts, meat). For each category, a species could use it as either a main food source (multiple possible), an extra food source or rarely/never consume it. The final score was then: 1) high protein, if the species only had high protein sources as main diet; 2) medium protein, if the species had main sources across high and low protein categories; or 3) low protein, if the species only had low protein sources as main diet. We treated diet as an ordinal variable.
+
+## Insularity
+
+We considered species insular if their native range only included non-continental ranges. We compiled this variable from @sayol2019larger, @ducatez2020behavioural and @IUCN. We treated this variable as binomial.
+
+## Latitude
+
+To account for seasonal variability we included the most extreme range (furthest from the equator) that a species inhabits. We downloaded all ranges included in @BOTW, which is the same source used for IUCN threat-status assessments. We only included native ranges and took the maximum absolute latitude (e.g. furthest distance from the equator) for each species. 
+
+## Developmental time
+
+Developmental time was included as incubation period + fledging period. Both these variables were compiled from Amniote Life History Database [@myhrvold2015amniote] (ALHD) and several handbooks and papers [@forshaw2010parrots, @forshaw2002australian, @smiet1985notes, @del1997handbook]. ALHD data was preferred over other sources. If multiple handbooks had values, the mean was used. We log transformed the data to get an approximately normally distributed variable. 
+
+## Clutch size
+
+Clutch size was compiled from the ALHD, Demographic Species Knowledge Index [@conde2019data] (D-SKI) and several handbooks and papers [@forshaw2010parrots, @forshaw2002australian, @smiet1985notes, @del1997handbook]. Because data from D-SKI already included data from the ALHD, D-SKI data was preferred over ALHD over other sources. If data was available from multiple handbooks we used the mean value. We log transformed the data to get an approximately normally distributed variable.
+
+## Age of first reproduction
+
+For age of first reproduction (AFR) we used parentage records from ZIMS. Since parrots were sometimes kept without a bird of the opposite sex, we calculated at what age 5% of the population had produced a live offspring for the first time. We only did this for species that had at least 30 individuals that had reproduced. We only included individuals that were captive born and had a known birth date. We removed cases where AFR was below 6 months or above 80 years, as these were clearly data entry errors. We calculated this proxy of AFR for 90 species and the log standardised values in the third model.  
+
+## Full statistical models
+
+All models were implemented using *ulam* from the *rethinking* package. We specified a structural equations model with a main model that explain life expectancy given a set of covariates. Each of the covariates had a sub-model that explained this variable given the relationships from the DAG (see main Figure 1). We also included a phylogenetic variance-covariance for all variables and standard error for life expectancy, body mass and brain mass. 
+
+\pagebreak
+
+Model 1  only included body mass, relative brain mass, latitude and diet as covariates The structure was as follows:
+
+$$
+\begin{aligned}
+\underline{\text{main model:}}&&\\
+\text{LE}_{\text{obs}, i} & \sim \text{normal}(\text{LE}_{\text{true},i},\ \text{SE}_{\text{LE},i}) & \text{LE = standardised life expectancy}\\
+\mathbf{LE}_{\text{true}} & \sim \text{MVnormal}(\boldsymbol{\mu}_{\text{LE}},\ \mathbf{S}_\text{LE}) & \text{SE = standard error}\\
+& & \boldsymbol{\mu}_{\text{LE}} \text{ = mean life expectancy per species}\\
+& & obs \text{ = observed data}\\
+& & true \text{ = modelled underlying true values}\\
+& & \mathbf{S} \text{ = variance co-variance matrix}\\
+\mu_{\text{LE}, i} & = \alpha_{\text{I}[i]}\ + & \text{I = index variable for insularity}\\
+&\ \ \ \ \  \beta_\text{BO} * \text{BO}_{\text{true},i}\ + & \text{BO = standardised body mass}\\
+&\ \ \ \ \   \beta_\text{BR} * (\text{BR}_{\text{true},i}\ - \mu_{\text{BR}, i})\ +  & \text{BR = standardised brain mass}\\
+&\ \ \ \ \   \beta_\text{LA} * \text{LA}_{i}\ + & \text{LA = standardised maximum latitude}\\
+&\ \ \ \ \   \beta_\text{PD} * \sum_{j = 0}^{\text{PD}_{i}-1} \delta_{\text{PD},j} & \text{D = protein level diet}\\
+& & \delta \text{ = marginal diet effect}\\
+\\
+\underline{\text{priors main model:}}&&\\
+\boldsymbol{\alpha},\ \beta_\text{BO},\ \beta_\text{BR},\ \beta_\text{I},\ \beta_\text{LA},\ \beta_\text{PD} & \sim \text{normal}(0,\ 0.5)\\
+\boldsymbol{\delta}_\text{PD} & \sim \text{dirichlet}(2,\ 2)\\
+\text{S}_{\text{LE},ij} & = \eta^2_\text{LE}\ \text{exp}(-\rho^2_\text{LE}\ \text{P}^2_{ij})\ +\ \delta_{\text{P},ij}\ \sigma_\text{P}^2 & \text{formula for L2 norm}\\
+\eta^2_\text{LE} & \sim \text{exponential}(2) & \text{P = normalised phylogenetic distance}\\
+\rho^2_\text{LE} & \sim \text{exponential}(0.1)\\
+\end{aligned}
+$$
+
+\pagebreak
+
+Sub-models in model 1:
+
+$$
+\begin{aligned}
+\underline{\text{sub-model latitude:}}&&\\
+\mathbf{LA} & \sim \text{MVnormal}(\boldsymbol{\mu}_{\text{LA}},\ \mathbf{S}_\text{LA}) & \\
+\mu_{\text{LA}, i} & \sim \text{normal}(0,\ 0.5)\\
+\text{S}_{\text{LA},ij} & = \eta^2_\text{LA}\ \text{exp}(-\rho^2_\text{LA}\ \text{P}^2_{ij})\ +\ \delta_{\text{P},ij}\ \sigma_\text{P}^2 &\\
+\eta^2_\text{LA} & \sim \text{exponential}(2) &\\
+\rho^2_\text{LA} & \sim \text{exponential}(0.1)\\
+\\
+\underline{\text{sub-model relative brain size:}}&&\\
+\text{BR}_{\text{obs}, i} & \sim \text{normal}(\text{BR}_{\text{true},i},\ \text{SE}_{\text{BR},i})\\
+\mathbf{BR}_{\text{true}} & \sim \text{MVnormal}(\boldsymbol{\mu}_{\text{BR}},\ \mathbf{S}_\text{BR}) &\\
+\mu_{\text{BR}, i} & = \xi\ +\ \phi * \text{BO}_{\text{true},i} & \\
+\xi,\ \phi &\sim \text{normal}(0,\ 0.5)\\
+\text{S}_{\text{BR},ij} & = \eta^2_\text{BR}\ \text{exp}(-\rho^2_\text{BR}\ \text{P}^2_{ij})\ +\ \delta_{\text{P},ij}\ \sigma_\text{P}^2 &\\
+\eta^2_\text{BR} & \sim \text{exponential}(2) &\\
+\rho^2_\text{BR} & \sim \text{exponential}(0.1)\\
+\\
+\underline{\text{sub-model body mass:}}&&\\
+\text{BO}_{\text{obs}, i} & \sim \text{normal}(\text{BO}_{\text{true},i},\ \text{SE}_{\text{BO},i})\\
+\mathbf{BO}_{\text{true}} & \sim \text{MVnormal}(\boldsymbol{\mu}_{\text{BO}},\ \mathbf{S}_\text{BO}) &\\
+\text{S}_{\text{BO},ij} & = \eta^2_\text{BO}\ \text{exp}(-\rho^2_\text{BO}\ \text{P}^2_{ij})\ +\ \delta_{\text{P},ij}\ \sigma_\text{P}^2 &\\
+\eta^2_\text{BO} & \sim \text{exponential}(2) &\\
+\rho^2_\text{BO} & \sim \text{exponential}(0.1)\\
+\end{aligned}
+$$
+
+To minimise confusion, conventional Greek symbols were used in combination with subscripts to denote to which part of the model they belong. Relative brain size was computed using the average expected brain mass ($\mu_{\text{BR},i}$) from a sub-model that run simultaneously.  We used $\xi$ and $\phi$ for the intercept and slope of brain mass sub-model to avoid confusion the body mass effect on life expectancy with the effect on brain size. Missing values for life expectancy, brain mass, body mass and latitude were imputed using the above distributions. 
+
+\pagebreak
+
+Model 2 also included developmental time and clutch size as predictors, but the structure of the other parts was the same. The main model was as follows:
+
+$$
+\begin{aligned}
+\underline{\text{main model:}}&&\\
+\text{LE}_{\text{obs}, i} & \sim \text{normal}(\text{LE}_{\text{true},i},\ \text{SE}_{\text{LE},i}) & \text{LE = standardised life expectancy}\\
+\mathbf{LE}_{\text{true}} & \sim \text{MVnormal}(\boldsymbol{\mu}_{\text{LE}},\ \mathbf{S}_\text{LE}) & \text{SE = standard error}\\
+& & \boldsymbol{\mu}_{\text{LE}} \text{ = mean life expectancy per species}\\
+& & obs \text{ = observed data}\\
+& & true \text{ = modelled underlying true values}\\
+& & \mathbf{S} \text{ = variance co-variance matrix}\\
+\mu_{\text{LE}, i} & = \alpha_{\text{I}[i]}\ + & \text{I = index variable for insularity}\\
+&\ \ \ \ \  \beta_\text{BO} * \text{BO}_{\text{true},i}\ + & \text{BO = standardised body mass}\\
+&\ \ \ \ \   \beta_\text{BR} * (\text{BR}_{\text{true},i}\ - \mu_{\text{BR}, i})\ +  & \text{BR = standardised brain mass}\\
+&\ \ \ \ \   \beta_\text{LA} * \text{LA}_{i}\ + & \text{LA = standardised maximum latitude}\\
+&\ \ \ \ \   \beta_\text{PD} * \sum_{j = 0}^{\text{PD}_{i}-1} \delta_{\text{PD},j} + & \text{PD = protein level diet}\\
+& \beta_\text{DT} * \text{DT}_{\text{true},i}\ + & \delta \text{ = marginal diet effect}\\
+& \beta_\text{CS} * \text{CS}_{\text{true},i}\ + & \text{DT = developmental time}\\
+& & \text{CS = clutch size} \\
+\\
+\underline{\text{priors main model:}}&&\\
+\boldsymbol{\alpha},\ \beta_\text{BO},\ \beta_\text{BR},\ \beta_\text{I},\ \beta_\text{LA},\ \beta_\text{PD},\ \beta_\text{DT},\ \beta_\text{CS}\  & \sim \text{normal}(0,\ 0.5)\\
+\boldsymbol{\delta}_\text{PD} & \sim \text{dirichlet}(2,\ 2)\\
+\text{S}_{\text{LE},ij} & = \eta^2_\text{LE}\ \text{exp}(-\rho^2_\text{LE}\ \text{P}^2_{ij})\ +\ \delta_{\text{P},ij}\ \sigma_\text{P}^2 & \text{formula for L2 norm}\\
+\eta^2_\text{LE} & \sim \text{exponential}(2) & \text{P = normalised phylogenetic distance}\\
+\rho^2_\text{LE} & \sim \text{exponential}(0.1)\\
+\end{aligned}
+$$
+
+\pagebreak
+
+The additional sub-models in model 2:
+
+$$
+\begin{aligned}
+\underline{\text{sub-model developmental time:}}&&\\
+\mathbf{DT} & \sim \text{MVnormal}(\boldsymbol{\mu}_{\text{DT}},\ \mathbf{S}_\text{DT}) & \\
+\mu_{\text{DT}, i} & = \zeta\ +\ \theta * \text{BO}_{\text{true},i}\ +\  \iota * (\text{BR}_{\text{true},i}\ - \mu_{\text{BR}, i})& \\
+\zeta,\ \theta,\ \iota &\sim \text{normal}(0,\ 0.5)\\
+\text{S}_{\text{DT},ij} & = \eta^2_\text{DT}\ \text{exp}(-\rho^2_\text{DT}\ \text{P}^2_{ij})\ +\ \delta_{\text{P},ij}\ \sigma_\text{P}^2 &\\
+\eta^2_\text{DT} & \sim \text{exponential}(2) &\\
+\rho^2_\text{DT} & \sim \text{exponential}(0.1)\\
+\underline{\text{sub-model developmental time:}}&&\\
+\mathbf{CS} & \sim \text{MVnormal}(\boldsymbol{\mu}_{\text{CS}},\ \mathbf{S}_\text{CS}) & \\
+\mu_{\text{CS}, i} & = \kappa\ +\ \omega * \text{LA}_{i}\ +\  \lambda * (\text{BR}_{\text{true},i}\ - \mu_{\text{BR}, i})& \\
+\kappa,\ \omega,\ \lambda &\sim \text{normal}(0,\ 0.5)\\
+\text{S}_{\text{CS},ij} & = \eta^2_\text{CS}\ \text{exp}(-\rho^2_\text{CS}\ \text{P}^2_{ij})\ +\ \delta_{\text{P},ij}\ \sigma_\text{P}^2 &\\
+\eta^2_\text{CS} & \sim \text{exponential}(2) &\\
+\rho^2_\text{CS} & \sim \text{exponential}(0.1)\\
+\end{aligned}
+$$
+
+To test if including AFR made a difference a third model was run. We sub-setted the data to species where we had AFR available and did not try to impute this variable. The structure of the sub models was the same as model 2, and we added $\beta_\text{AFR} * \text{AFR}_{i}$ as a predictor in the main model, where $\beta_\text{AFR} \sim \text{normal}(0,\ 0.5)$.
+
+\pagebreak
+
+# Supplemental Results
+
+```{r phylogentic treefrom sub PDF, include=TRUE, fig.align="center", fig.cap='Phylogenetic tree of all species for which enough data was available. Branches are coloured acording to life expectancy (see density plot in bottom right).', fig.height=7, fig.width=7, echo=FALSE}
+knitr::include_graphics(path_phylo)
+```
+
+\pagebreak
+
+```{r model 1 slopes, echo=FALSE, fig.align="center", fig.cap = paste('Slope estimates for predictor variables and phylogenetic signal in model 1. For insularity the difference between islandic and continental species is shown. Grey density plots and lines are the regularising priors. Coloured areas are the posterior densities for the parameters. Black lines are 20 samples of the posterior for the phylogenetic covariance.'), fig.height=5, fig.width=10}
+par(mfrow = c(2, 4))
+post = extract.samples(m_1_final)
+prior = rnorm(1e6, 0, 0.5) %>% density
+# Insularity
+(rnorm(1e6, 0, 0.5) - rnorm(1e6, 0, 0.5)) %>% density %>% 
+  plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'diff insularity', xlab = 'standard deviation', ylab = 'density')
+(rnorm(1e6, 0, 0.5) - rnorm(1e6, 0, 0.5)) %>% density %>% polygon(col = alpha(colours[['grey']], 0.5))
+(post$a_life[,1] - post$a_life[,2]) %>% density %>% polygon(col = alpha(colours[['brown']], 0.5))
+abline(v = 0, lty = 2, lwd = 2, col = alpha('black', 0.5))
+# Body
+prior %>% plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'beta body size', xlab = 'standard deviation', ylab = 'density')
+prior %>% polygon(col = alpha(colours[['grey']], 0.5))
+post$b_body_life %>% density %>% polygon(col = alpha(colours[['blue']], 0.5))
+abline(v = 0, lty = 2, lwd = 2, col = alpha('black', 0.5))
+# Brain
+sd_rel_brain = sapply(1:nrow(post$true_brain), function(j) 
+  sapply(1:ncol(post$true_brain), function(i){
+    mu_brain = post$a_brain[j] + post$b_body_brain[j] * post$true_body[j,i]
+    (post$true_brain[j,i] - mu_brain)
+  }) %>% sd)
+prior %>% plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'beta relative brain size', xlab = 'standard deviation', ylab = 'density')
+prior %>% polygon(col = alpha(colours[['grey']], 0.5))
+sapply(1:length(post$b_brain_life), function(i) post$b_brain_life[i] * sd_rel_brain[i]) %>% density %>% polygon(col = alpha(colours[['purple']], 0.5))
+abline(v = 0, lty = 2, lwd = 2, col = alpha('black', 0.5))
+# Latitude
+prior %>% plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'beta latitude', xlab = 'standard deviation', ylab = 'density')
+prior %>% polygon(col = alpha(colours[['grey']], 0.5))
+post$b_lat_life %>% density %>% polygon(col = alpha(colours[['red']], 0.5))
+abline(v = 0, lty = 2, lwd = 2, col = alpha('black', 0.5))
+# Diet
+prior %>% plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'beta diet', xlab = 'standard deviation', ylab = 'density')
+prior %>% polygon(col = alpha(colours[['grey']], 0.5))
+post$b_protein_life %>% density %>% polygon(col = alpha(colours[['green']], 0.5))
+abline(v = 0, lty = 2, lwd = 2, col = alpha('black', 0.5))
+# Phylogenetic signal
+plot(NULL, xlab = 'normalised phylogenetic distance', ylab = 'covariance',
+     xlim=c(0,1) , ylim=c(0,1), main = 'phylogenetic signal')
+x_seq <- seq(from = 0, to = 1, length.out = 1000)
+for(i in 1:20) curve( rexp(1, 2)*exp(-rexp(1, 0.1)*x^2) , add = TRUE ,
+                      col = alpha(colours[['grey']], 0.4), lwd = 3)
+for(i in 1:20){
+  curve( post$etasq_life[i]*exp(-post$rhosq_life[i]*x^2) , add = TRUE ,
+         col = alpha('black', 0.4), lwd = 3)
+}
+```
+
+\pagebreak
+
+```{r model 2 slopes, echo=FALSE, fig.align="center", fig.cap = paste('Slope estimates for predictor variables and phylogenetic signal in model 2. For insularity the difference between islandic and continental species is shown. Grey density plots and lines are the regularising priors. Coloured areas are the postior densities for the parameters. Black lines are 20 samples of the posterior for the phylogenetic covariance.'), fig.height=5, fig.width=10}
+par(mfrow = c(2, 4))
+post = extract.samples(m_2_final)
+prior = rnorm(1e6, 0, 0.5) %>% density
+# Insularity
+(rnorm(1e6, 0, 0.5) - rnorm(1e6, 0, 0.5)) %>% density %>% 
+  plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'diff insularity', xlab = 'standard deviation', ylab = 'density')
+(rnorm(1e6, 0, 0.5) - rnorm(1e6, 0, 0.5)) %>% density %>% polygon(col = alpha(colours[['grey']], 0.5))
+(post$a_life[,1] - post$a_life[,2]) %>% density %>% polygon(col = alpha(colours[['brown']], 0.5))
+abline(v = 0, lty = 2, lwd = 2, col = alpha('black', 0.5))
+# Body
+prior %>% plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'beta body size', xlab = 'standard deviation', ylab = 'density')
+prior %>% polygon(col = alpha(colours[['grey']], 0.5))
+post$b_body_life %>% density %>% polygon(col = alpha(colours[['blue']], 0.5))
+abline(v = 0, lty = 2, lwd = 2, col = alpha('black', 0.5))
+# Brain
+sd_rel_brain = sapply(1:nrow(post$true_brain), function(j) 
+  sapply(1:ncol(post$true_brain), function(i){
+    mu_brain = post$a_brain[j] + post$b_body_brain[j] * post$true_body[j,i]
+    (post$true_brain[j,i] - mu_brain)
+  }) %>% sd)
+prior %>% plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'beta relative brain size', xlab = 'standard deviation', ylab = 'density')
+prior %>% polygon(col = alpha(colours[['grey']], 0.5))
+sapply(1:length(post$b_brain_life), function(i) post$b_brain_life[i] * sd_rel_brain[i]) %>% density %>% polygon(col = alpha(colours[['purple']], 0.5))
+abline(v = 0, lty = 2, lwd = 2, col = alpha('black', 0.5))
+# Latitude
+prior %>% plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'beta latitude', xlab = 'standard deviation', ylab = 'density')
+prior %>% polygon(col = alpha(colours[['grey']], 0.5))
+post$b_lat_life %>% density %>% polygon(col = alpha(colours[['red']], 0.5))
+abline(v = 0, lty = 2, lwd = 2, col = alpha('black', 0.5))
+# Diet
+prior %>% plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'beta diet', xlab = 'standard deviation', ylab = 'density')
+prior %>% polygon(col = alpha(colours[['grey']], 0.5))
+post$b_protein_life %>% density %>% polygon(col = alpha(colours[['green']], 0.5))
+abline(v = 0, lty = 2, lwd = 2, col = alpha('black', 0.5))
+# Developmental time
+prior %>% plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'beta developmental time', xlab = 'standard deviation', ylab = 'density')
+prior %>% polygon(col = alpha(colours[['grey']], 0.5))
+post$b_dev_life %>% density %>% polygon(col = alpha(colours[['yellow']], 0.5))
+abline(v = 0, lty = 2, lwd = 3, col = alpha('black', 0.5))
+# Clutch size
+prior %>% plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'beta clutch size', xlab = 'standard deviation', ylab = 'density')
+prior %>% polygon(col = alpha(colours[['grey']], 0.5))
+post$b_clutch_life %>% density %>% polygon(col = alpha(colours[['yellow']], 0.5))
+abline(v = 0, lty = 2, lwd = 3, col = alpha('black', 0.5))
+# Phylogenetic signal
+plot(NULL, xlab = 'normalised phylogenetic distance', ylab = 'covariance',
+     xlim=c(0,1) , ylim=c(0,1), main = 'phylogenetic signal')
+x_seq <- seq(from = 0, to = 1, length.out = 1000)
+for(i in 1:20) curve( rexp(1, 2)*exp(-rexp(1, 0.1)*x^2) , add = TRUE ,
+                      col = alpha(colours[['grey']], 0.4), lwd = 3)
+for(i in 1:20){
+  curve( post$etasq_life[i]*exp(-post$rhosq_life[i]*x^2) , add = TRUE ,
+         col = alpha('black', 0.4), lwd = 3)
+}
+```
+
+\pagebreak
+
+```{r model 3 slopes, echo=FALSE, fig.align="center", fig.cap = paste('Slope estimates for predictor variables and phylogenetic signal in model 3. For insularity the difference between islandic and continental species is shown. Grey density plots and lines are the regularising priors. Coloured areas are the postior densities for the parameters. Black lines are 20 samples of the posterior for the phylogenetic covariance.'), fig.height=7.5, fig.width=10}
+par(mfrow = c(3, 4))
+post = extract.samples(m_3_final)
+prior = rnorm(1e6, 0, 0.5) %>% density
+# Insularity
+(rnorm(1e6, 0, 0.5) - rnorm(1e6, 0, 0.5)) %>% density %>% 
+  plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'diff insularity', xlab = 'standard deviation', ylab = 'density')
+(rnorm(1e6, 0, 0.5) - rnorm(1e6, 0, 0.5)) %>% density %>% polygon(col = alpha(colours[['grey']], 0.5))
+(post$a_life[,1] - post$a_life[,2]) %>% density %>% polygon(col = alpha(colours[['brown']], 0.5))
+abline(v = 0, lty = 2, lwd = 2, col = alpha('black', 0.5))
+# Body
+prior %>% plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'beta body size', xlab = 'standard deviation', ylab = 'density')
+prior %>% polygon(col = alpha(colours[['grey']], 0.5))
+post$b_body_life %>% density %>% polygon(col = alpha(colours[['blue']], 0.5))
+abline(v = 0, lty = 2, lwd = 2, col = alpha('black', 0.5))
+# Brain
+sd_rel_brain = sapply(1:nrow(post$true_brain), function(j) 
+  sapply(1:ncol(post$true_brain), function(i){
+    mu_brain = post$a_brain[j] + post$b_body_brain[j] * post$true_body[j,i]
+    (post$true_brain[j,i] - mu_brain)
+  }) %>% sd)
+prior %>% plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'beta relative brain size', xlab = 'standard deviation', ylab = 'density')
+prior %>% polygon(col = alpha(colours[['grey']], 0.5))
+sapply(1:length(post$b_brain_life), function(i) post$b_brain_life[i] * sd_rel_brain[i]) %>% density %>% polygon(col = alpha(colours[['purple']], 0.5))
+abline(v = 0, lty = 2, lwd = 2, col = alpha('black', 0.5))
+# Latitude
+prior %>% plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'beta latitude', xlab = 'standard deviation', ylab = 'density')
+prior %>% polygon(col = alpha(colours[['grey']], 0.5))
+post$b_lat_life %>% density %>% polygon(col = alpha(colours[['red']], 0.5))
+abline(v = 0, lty = 2, lwd = 2, col = alpha('black', 0.5))
+# Diet
+prior %>% plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'beta diet', xlab = 'standard deviation', ylab = 'density')
+prior %>% polygon(col = alpha(colours[['grey']], 0.5))
+post$b_protein_life %>% density %>% polygon(col = alpha(colours[['green']], 0.5))
+abline(v = 0, lty = 2, lwd = 2, col = alpha('black', 0.5))
+# Developmental time
+prior %>% plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'beta developmental time', xlab = 'standard deviation', ylab = 'density')
+prior %>% polygon(col = alpha(colours[['grey']], 0.5))
+post$b_dev_life %>% density %>% polygon(col = alpha(colours[['yellow']], 0.5))
+abline(v = 0, lty = 2, lwd = 3, col = alpha('black', 0.5))
+# Clutch size
+prior %>% plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'beta clutch size', xlab = 'standard deviation', ylab = 'density')
+prior %>% polygon(col = alpha(colours[['grey']], 0.5))
+post$b_clutch_life %>% density %>% polygon(col = alpha(colours[['yellow']], 0.5))
+abline(v = 0, lty = 2, lwd = 3, col = alpha('black', 0.5))
+# AFR
+prior %>% plot(ylim = c(0, 12), xlim = c(-1.5, 1.5), main = 'beta AFR', xlab = 'standard deviation', ylab = 'density')
+prior %>% polygon(col = alpha(colours[['grey']], 0.5))
+post$b_afr_life %>% density %>% polygon(col = alpha(colours[['yellow']], 0.5))
+abline(v = 0, lty = 2, lwd = 3, col = alpha('black', 0.5))
+# Phylogenetic signal
+plot(NULL, xlab = 'normalised phylogenetic distance', ylab = 'covariance',
+     xlim=c(0,1) , ylim=c(0,1), main = 'phylogenetic signal')
+x_seq <- seq(from = 0, to = 1, length.out = 1000)
+for(i in 1:20) curve( rexp(1, 2)*exp(-rexp(1, 0.1)*x^2) , add = TRUE ,
+                      col = alpha(colours[['grey']], 0.4), lwd = 3)
+for(i in 1:20){
+  curve( post$etasq_life[i]*exp(-post$rhosq_life[i]*x^2) , add = TRUE ,
+         col = alpha('black', 0.4), lwd = 3)
+}
+```
+
+\pagebreak
+
+```{r life expectancy and brain size plot model 1 - make figure, include = FALSE}
+set.seed(1)
+clean.data(c('body', 'brain', 'life', 'lat', 'insularity', 'dev_time', 'diet_protein', 'clutch'))
+
+pdf(path_pdf_m1, 7, 5)
+post = extract.samples(m_1_final)
+stand_life = clean_dat$stand_life
+se_life = clean_dat$se_life
+mean_imp_life = post$stand_life_impute %>% apply(2, mean)
+pi_imp_life = post$stand_life_impute %>% apply(2, PI)
+rel_brain = sapply(1:ncol(post$true_brain), function(i) 
+  sapply(1:nrow(post$true_brain), function(j){
+    mu_brain = post$a_brain[j] + post$b_body_brain[j] * post$true_body[j,i]
+    (post$true_brain[j,i] - mu_brain)
+  }))
+mean_rel_brain = rel_brain %>% apply(2, mean)
+pi_rel_brain = rel_brain %>% apply(2, PI)
+plot(NULL, xlim = c(-0.75, 0.75), ylim = c(-3, 3), yaxt = 'n',
+     xlab = 'standardised relative log brain size', ylab = 'life expectancy [years]',
+     main = '')
+axis(2, at = seq(-3, 3, 1), 
+     labels = (seq(-3, 3, 1) * sd(dat$log_mean_life_exp, na.rm = T) + 
+                 mean(dat$log_mean_life_exp, na.rm = T)) %>% exp %>% round)
+for(i in which(!is.na(stand_life)))
+  lines(rep(mean_rel_brain[i], 2), stand_life[i] + c(-1, 1) * se_life[i], col = alpha(colours[['pink']], 0.3),
+        lwd = 3)
+for(i in which(!is.na(stand_life)))
+  lines(pi_rel_brain[,i], rep(stand_life[i], 2), col = alpha(colours[['pink']], 0.3),
+        lwd = 3)
+points(mean_rel_brain, stand_life, pch = 16, col = alpha(colours[['pink']], 0.9), cex = 1.5)
+for(i in 1:20) lines(c(-0.75, 0.75), post$b_brain_life[i] * c(-0.75, 0.75),
+                     col = alpha(colours[['purple']], 0.5), lwd = 4)
+dev.off()
+
+```
+
+# References
