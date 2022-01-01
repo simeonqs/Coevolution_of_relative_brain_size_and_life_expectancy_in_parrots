@@ -1,10 +1,10 @@
-# Coevolution of brain size and longevity in parrots
+# Coevolution of relative brain size and life expectancy in parrots
 
 The R code needed to replicate results from the article:
 
 ```
 Smeele SQ, Conde DA, Baudisch A, Bruslund S, Iwaniuk A, Staerk H, Wright TF, Young AM, McElreath MB, Aplin L. in prep. 
-Coevolution of brain size and longevity in parrots.
+Coevolution of relative brain size and life expectancy in parrots.
 ```
 
 ------------------------------------------------
