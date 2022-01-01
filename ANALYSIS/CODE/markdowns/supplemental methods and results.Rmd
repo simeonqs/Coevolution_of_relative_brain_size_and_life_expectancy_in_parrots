@@ -1,6 +1,6 @@
 ---
 title: "Supplemental Methods and Results"
-date: "28-10-2021"
+date: "31-12-2021"
 output:
   pdf_document:
     toc: yes
@@ -16,7 +16,7 @@ bibliography: bibliography.bib
 
 ```{r setup, include=FALSE}
 # Set up
-# setwd('/Users/ssmeele/ownCloud/Simeon/MPI AB/PhD thesis/Chapter IV/Coevolution_of_brain_size_and_longevity_in_parrots_supports_the_cognitive_buffer_hypothesis/ANALYSIS/CODE/markdowns')
+# setwd('/Users/ssmeele/ownCloud/Simeon/MPI AB/PhD thesis/Chapter IV/Coevolution_of_brain_size_and_longevity_in_parrots/ANALYSIS/CODE/markdowns')
 library(tidyverse)
 library(ape)
 library(phytools)
@@ -81,7 +81,7 @@ Where $\mu_i$ is the species-level average, $\alpha_{\text{species}[i]}$ the spe
 
 ## Brain size
 
-Raw brain size measurements were compiled from three sources: new measurements of brain weight, brain weight taken from @iwaniuk2005interspecific and endocranial volumes taken from @ksepka2020tempo. Brain weight was estimated from endocranial volumes using: 1.036 g/ml [@kretschmann1969biometrische]. To estimate the average log adult brain weight per species we ran a Bayesian model with the following structure:
+Raw brain size measurements were compiled from three sources: new measurements of brain weight, brain weight taken from @iwaniuk2005interspecific and endocranial volumes taken from @ksepka2020tempo. Brain weight was estimated from endocranial volumes using: 1.036 g/ml [@kretschmann1969biometrische]. @iwaniuk2002can showed that endocranial volumes are highly correlated with whole brain weight in birds and that bias should only be a problem when looking at brain areas or seasonal variation. To estimate the average log adult brain weight per species we ran a Bayesian model with the following structure:
 
 $$\begin{aligned}
 \text{brain weight}_i & \sim \text{normal}(\mu_i,\ \sigma)\\
@@ -120,9 +120,11 @@ For age of first reproduction (AFR) we used parentage records from ZIMS. Since p
 
 ## Full statistical models
 
-All models were implemented using *ulam* from the *rethinking* package. We specified a structural equations model with a main model that explain life expectancy given a set of covariates. Each of the covariates had a sub-model that explained this variable given the relationships from the DAG (see main Figure 1). We also included a phylogenetic variance-covariance for all variables and standard error for life expectancy, body mass and brain mass. 
+We ran three models to test which hypothesis best explained the observed data. All models were implemented using *ulam* from the *rethinking* package. We specified a structural equations model with a main model that explain life expectancy given a set of covariates. Each of the covariates had a sub-model that explained this variable given the relationships from the DAG (see main Figure 1). We also included a phylogenetic variance-covariance for all variables and standard error for life expectancy, body mass and brain mass. 
 
 \pagebreak
+
+### Model 1
 
 Model 1  only included body mass, relative brain mass, latitude and diet as covariates The structure was as follows:
 
@@ -186,6 +188,8 @@ To minimise confusion, conventional Greek symbols were used in combination with 
 
 \pagebreak
 
+### Model 2
+
 Model 2 also included developmental time and clutch size as predictors, but the structure of the other parts was the same. The main model was as follows:
 
 $$
@@ -238,7 +242,13 @@ $$
 \end{aligned}
 $$
 
+### Model 3 
+
 To test if including AFR made a difference a third model was run. We sub-setted the data to species where we had AFR available and did not try to impute this variable. The structure of the sub models was the same as model 2, and we added $\beta_\text{AFR} * \text{AFR}_{i}$ as a predictor in the main model, where $\beta_\text{AFR} \sim \text{normal}(0,\ 0.5)$.
+
+### Priors
+
+Priors for the intercept ($\alpha$) and slopes ($\beta$s) were chosen such that most of the prior assigned effects were between -1 and 1 with no effect as the most likely effect, thereby mildly regularising the model to conservative values. The prior for the delta variables was chosen to be mildly regularising as well. For the $\eta^2$ and $\rho^2$ priors we used prior predictive simulations to make sure that the covariance structure allowed by the prior stayed within possible bounds while still allowing for both very strong and no covariance. 
 
 \pagebreak
 
