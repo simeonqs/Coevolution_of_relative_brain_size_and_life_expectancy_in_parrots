@@ -17,7 +17,8 @@
 taxonomy = read.csv2('../DATA/taxonomy/IUCN translation list - final.csv', 
                      na.strings = c('', ' ', 'NA'), stringsAsFactors = F)
 dat = data.frame(species = na.omit(unique(taxonomy$species))) # start with all the correct species names
-dat = data.frame(species = dat[dat$species != 'Strigops habroptila',]) # removing kakapo because it's such an outlier
+dat = data.frame(species = dat[dat$species != 'Strigops habroptila',]) # removing kakapo because it's such 
+                                                                       # an outlier
 load('../RESULTS/weight/master_dat.RData')
 dat = merge(dat, master_dat, by = 'species', all.x = T, all.y = F)
 load('../RESULTS/brain/master_dat.RData')
