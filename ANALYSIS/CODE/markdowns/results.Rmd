@@ -16,7 +16,7 @@ You can also skip the intermediate steps and directly reproduce the figures. Fig
 
 ```{r setup, include=FALSE}
 # Set up
-# setwd('/Users/ssmeele/ownCloud/Simeon/MPI AB/PhD thesis/Chapter IV/Coevolution_of_brain_size_and_longevity_in_parrots_supports_the_cognitive_buffer_hypothesis/ANALYSIS/CODE/markdowns')
+# setwd('/Users/ssmeele/ownCloud/Simeon/MPI AB/PhD thesis/Chapter IV/Coevolution_of_brain_size_and_longevity_in_parrots/ANALYSIS/CODE/markdowns')
 # setwd('ANALYSIS/CODE/markdowns')
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
@@ -78,7 +78,6 @@ This step creates the phylogenetic tree with branches coloured by life expectanc
 
 ```{r make phylogentic tree, eval=FALSE, include=FALSE}
 # This code is not run, it's only here to show how the figure is made. The final figures was made in inkscape. 
-
 # Pruning tree
 tree.tips = tree$tip.label
 tree.tips.or = tree.tips
@@ -97,7 +96,7 @@ names(value) = tree.tips.or
 ph = data.frame(value = value)
 rownames(ph) = names(value)
 svl = as.matrix(ph)[,1]
-obj = contMap(tree, svl, outline = FALSE, plot = F)
+obj = contMap(plot_tree, svl, outline = FALSE, plot = F)
 ## what is the length of the current color ramp?
 n = length(obj$cols)
 ## change to blue -> red
@@ -196,7 +195,7 @@ g = ggplot(ph, aes(x = value, y = order)) +
         plot.margin = unit(c(34,0.5,0.25,23), 'cm')) 
 print(g, newpage = FALSE)
 
-#Save
+# Save
 dev.off()
 
 ```
@@ -213,21 +212,33 @@ sd_rel_brain = sapply(1:nrow(post$true_brain), function(j)
     mu_brain = post$a_brain[j] + post$b_body_brain[j] * post$true_body[j,i]
     (post$true_brain[j,i] - mu_brain)
   }) %>% sd)
-slope_1 = mean(sapply(1:length(post$b_brain_life), function(i) post$b_brain_life[i] * sd_rel_brain[i])) %>% round(2) %>% formatC(format = 'f', flag='0', digits = 2)
+slope_1_dist = sapply(1:length(post$b_brain_life), function(i) post$b_brain_life[i] * sd_rel_brain[i])
+slope_1_overlap_0 = length(which(slope_1_dist < 0))/length(slope_1_dist)
+slope_1 = mean(slope_1_dist) %>% round(2) %>% formatC(format = 'f', flag='0', digits = 2)
 post = extract.samples(m_2_final)
 sd_rel_brain = sapply(1:nrow(post$true_brain), function(j) 
   sapply(1:ncol(post$true_brain), function(i){
     mu_brain = post$a_brain[j] + post$b_body_brain[j] * post$true_body[j,i]
     (post$true_brain[j,i] - mu_brain)
   }) %>% sd)
-slope_2 = mean(sapply(1:length(post$b_brain_life), function(i) post$b_brain_life[i] * sd_rel_brain[i])) %>% round(2)
+slope_2_dist = sapply(1:length(post$b_brain_life), function(i) post$b_brain_life[i] * sd_rel_brain[i])
+slope_2_overlap_0 = length(which(slope_2_dist < 0))/length(slope_2_dist)
+slope_2 = mean(slope_2_dist) %>% round(2)
+slope_dev = mean(post$b_dev_life)
+slope_dev_overlap_0 = length(which(post$b_dev_life < 0))/length(post$b_dev_life)
+slope_clutch = mean(post$b_clutch_life)
+slope_clutch_overlap_0 = length(which(post$b_clutch_life < 0))/length(post$b_clutch_life)
 post = extract.samples(m_3_final)
 sd_rel_brain = sapply(1:nrow(post$true_brain), function(j) 
   sapply(1:ncol(post$true_brain), function(i){
     mu_brain = post$a_brain[j] + post$b_body_brain[j] * post$true_body[j,i]
     (post$true_brain[j,i] - mu_brain)
   }) %>% sd)
-slope_3 = mean(sapply(1:length(post$b_brain_life), function(i) post$b_brain_life[i] * sd_rel_brain[i])) %>% round(2)
+slope_3_dist = sapply(1:length(post$b_brain_life), function(i) post$b_brain_life[i] * sd_rel_brain[i])
+slope_3_overlap_0 = length(which(slope_3_dist < 0))/length(slope_3_dist)
+slope_3 = mean(slope_3_dist) %>% round(2)
+slope_afr = mean(post$b_afr_life)
+slope_afr_overlap_0 = length(which(post$b_afr_life < 0))/length(post$b_afr_life)
 ```
 \
 
