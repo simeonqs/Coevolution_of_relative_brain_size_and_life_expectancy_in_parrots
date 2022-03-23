@@ -1,0 +1,1 @@
+This folder contains the two (sub-)species lists used to standardise taxonomy. They are based on IUCN taxonomy. Names that could not be directly matched with existing synonyms were manually checked online. 
