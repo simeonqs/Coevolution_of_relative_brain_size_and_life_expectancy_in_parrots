@@ -20,10 +20,10 @@ Previous studies have demonstrated a correlation between longevity and brain siz
 
 ANALYSIS:
   - CODE: the code to replicate results
-  - DATA: raw data; will be available upon publication
-  - RESULTS: intermediate results and figures; will be available upon publication
+  - DATA: raw data; only non-sensitive data is available
+  - RESULTS: intermediate results and figures; only small files can be made available
 
-NOTE: Some data contains sensitive information (zoo records) and can therefore not be made available even after publication. Processed data will be made available.
+NOTE: Some data contains sensitive information (zoo records) and can therefore not be made available. Processed data will be made available.
 
 ------------------------------------------------
 
