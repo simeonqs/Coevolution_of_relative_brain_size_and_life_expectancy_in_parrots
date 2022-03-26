@@ -1,0 +1,1 @@
+This folder contains all intermediate results (cleaned data) and figures. Model results are not uploaded since they are too large. They can be downloaded from Dryad, once curation is done. Intermediate results are RData files and can be loaded directly into R.
