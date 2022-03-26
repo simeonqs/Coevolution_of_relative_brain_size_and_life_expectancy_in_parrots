@@ -1,0 +1,1 @@
+This folder contains the RMarkdown files to compile the results and the supplemental materials. It also contains the files required for compilation and the output, since RMarkdown is very unflexible with paths. 
