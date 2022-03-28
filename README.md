@@ -1,6 +1,6 @@
 # Coevolution of relative brain size and life expectancy in parrots
 
-The R code needed to replicate results from the article:
+The R code and data needed to replicate results from the article:
 
 ```
 Smeele SQ et al. 2022 Coevolution of relative brain size and life expectancy in parrots. Proc. R. Soc. B 289: 20212397. https://doi.org/10.1098/rspb.2021.2397
