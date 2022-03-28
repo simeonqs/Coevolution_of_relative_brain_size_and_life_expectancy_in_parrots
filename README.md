@@ -115,6 +115,95 @@ NOTE: each code file contains additional information about author, date modified
 
 ------------------------------------------------
 
+**Meta data:**
+
+- ANALYSIS/DATA/Andrew Iwaniuk/data.csv
+	- column A: genus name
+	- column B: species name
+	- column C: individual ID
+	- column D: sex
+	- column E: not used
+	- column F: brain weight (grams)
+- ANALYSIS/DATA/cleaned weights/WeightMean.csv
+	- species: standardised species name
+	- varval: variable value, body weight in grams
+	- other columns: full taxonomy
+- ANALYSIS/DATA/diet/diet data.xlsx
+	- column A: standardised species name
+	- column B-J: food types, possible values are described in the meta data tab
+	- source: last name expert or reference to paper, multiple entries possible
+- ANALYSIS/DATA/other litterature/data.csv
+	- species: standardised species name
+	- source: reference to book, website or publication
+	- min_foraging_flock: minimal foraging flock size recorded
+	- max_foraging_flock: maximum normal foraging flock size recorded
+	- extreme_foraging_flock: foraging flock size at e.g. clay-lick or fruiting tree
+	- communal_roost: whether or not the species has a communal roost 
+	- immature_foraging_flock: the size of immature flocks if recorded
+	- breeding_flock: the size is breeding flocks if recorded
+	- min_n_eggs: minimal number of eggs recorded
+	- max_n_eggs: maximum number of eggs recorded
+	- incubation_days: incubation time in days
+	- fledging_days: fledging period in days (from hatch to leaving nest)
+	- nestling_period_days: see fledging_days (some books use different terminology)
+	- fed_by_parent_months: how long parents feed offspring after fledging in months
+	- fledging_period_days: not used
+	- foraging_flock_size: not used
+	- habitat: not used
+	- sexually_different_marking: whether or not species have different colouration between sexed
+	- diet: which food sources are used (we did not use this source, but contacted experts)
+	- nesting: where species nest
+	- flocking: not used
+	- first_repdroduction: not used
+	- notes: not used
+- ANALYSIS/DATA/taxonomy/IUCN sub species taxonomy.csv
+	- original_species: sub-species names used in zoos; note that this column can have multiple entries per cell, the repo includes a function to clean this up and compile a data frame that can be used for standardisation
+	- species: the standardised IUCN species-level name
+- ANALYSIS/DATA/taxonomy/IUCN translation list - final.csv
+	- original_species: species names used in data bases and zoos
+	- species: the standardised IUCN species-level name
+	- order: the standardised IUCN order-level name
+	- source: how the IUCN taxonomy was found: exact_match - found exactly the same on IUCN, fuzzy_match - found with few characters shuffled on ICUN, manual_avibase - found manually on Avibase, synonym_match - match to synonym listed by IUCN
+	- notes: when species not found this explains why - often a species is a hybrid or is extinct
+- ANALYSIS/RESULTS/AFR/5th percentile results.csv
+	- column A: not used
+	- species: the standardised IUCN species-level name
+	- afr_5th_percentile: the fifth percentile of ages when individuals were observed to reproduced for the first time (in days)
+- ANALYSIS/RESULTS/brain/master_dat.RData
+	- species: the standardised IUCN species-level name
+	- log_mean_brain_size: the mean of the natural logarithm of the predicted brain size from the Bayesian model
+	- log_SE_brain_size: the standard error (standard deviation) of the natural logarithm of the predicted brain size from the Bayesian model
+- ANALYSIS/RESULTS/clutch size/master_dat.RData
+	- species: the standardised IUCN species-level name
+	- clutch_size_n: the average number of eggs per clutch
+- ANALYSIS/RESULTS/developmental time/master_dat.RData	
+	- species: the standardised IUCN species-level name
+	- fledging_age_days: from hatch to fledge in days
+	- incubation_days: incubation period in days
+- ANALYSIS/RESULTS/diet/master_dat.RData
+	- species: the standardised IUCN species-level name
+	- diet_protein: protein content of diet ranging from low (1) to high (3), ordered categorical
+- ANALYSIS/RESULTS/insularity/master_dat.RData
+	- species: the standardised IUCN species-level name
+	- insularity: whether a species is only found on islands (1) or not (0)
+- ANALYSIS/RESULTS/latitude/master_dat.RData
+	- species: the standardised IUCN species-level name
+	- max_lat: the maximum absolute latitude (furthest away from equator) a species range covers
+- ANALYSIS/RESULTS/life expectancy/master_dat.RData
+	- species: the standardised IUCN species-level name
+	- log_mean_life_exp: the mean of the natural logarithm of the predicted life expectancy from the Bayesian model
+	- log_SE_life_exp: the standard error (standard deviation) of the natural logarithm of the predicted life expectancy from the Bayesian model
+- ANALYSIS/RESULTS/life expectancy/checklist_2021-03-23 10:57:36 results no sex.csv
+	- species: the standardised IUCN species-level name
+	- column B-F: not used
+	- keep_GO: whether or not the model full-filled all requirements to be included (convergence)
+- ANALYSIS/RESULTS/weight/master_dat.RData
+	- species: the standardised IUCN species-level name
+	- log_mean_body_weight: the mean of the natural logarithm of the predicted body weight from the Bayesian model
+	- log_SE_body_weight: the standard error (standard deviation) of the natural logarithm of the predicted body weight from the Bayesian model
+
+------------------------------------------------
+
 **Maintainers and contact:**
 
 Please contact Simeon Q. Smeele, <ssmeele@ab.mpg.de>, if you have any questions or suggestions. 
